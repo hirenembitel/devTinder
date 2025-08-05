@@ -4,10 +4,12 @@ import { userModel } from "./user.js"; // Assuming userModel is defined in user.
 const connectionRequestSchema = new mongoose.Schema({
     from_user_id: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Reference to the user model
         required: true,
     },
     to_user_id: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Reference to the user model
         required: true,        
     },
     status: {

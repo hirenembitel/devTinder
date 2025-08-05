@@ -17,5 +17,5 @@ POST /request/review/rejected/:requestId
 
 #userRouter
 GET /user/connections
-GET /user/request
+GET /user/request/recieved
 GET feed - Get list of connection that matches with your interested. list of users.

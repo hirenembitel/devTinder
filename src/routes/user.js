@@ -1,5 +1,7 @@
 import express from "express";
 import { userModel } from "../models/user.js"; // Adjust the import path as necessary
+import { authMiddleware } from "../middlewares/auth.js";
+import { connectionRequestModel } from "../models/connectionRequest.js"; // Adjust the import path as necessary
 
 const userRouter = express.Router();
 
@@ -79,6 +81,107 @@ userRouter.patch("/user",async (req, res) => {
     }catch (error) {
         //console.error("Error updating user:", error);
         res.status(500).send(error.message);
+    }
+});
+// Get the connection requests for the user
+// Assuming you have a connectionRequestModel to handle connection requests
+userRouter.get("/user/requests/recieved", authMiddleware , async (req, res) => {
+    try {
+        console.log("Fetching connection requests for user:", req.user._id);
+        const requests = await connectionRequestModel.find({
+                 to_user_id: req.user._id,
+                 status: { $in: ["interested"] }
+        }).populate('from_user_id', 'firstname lastname age gender skills'); // Populate user details
+          //.populate('to_user_id', 'firstname lastname email'); // Populate user details
+
+        res.status(200).json({ valid: true, requests });
+    }catch (error) {
+        //console.error("Error fetching connection requests:", error);
+        res.status(500).json({ valid: false, message:  error.message+" An error occurred while fetching connection requests."});
+    }
+});
+
+userRouter.get("/user/connections", authMiddleware, async (req, res) => {
+    try {
+        
+        const connections = await connectionRequestModel.find({
+            $or: [
+                { from_user_id: req.user._id, status: "accepted" },
+                { to_user_id: req.user._id, status: "accepted" }
+            ]
+        }).populate('from_user_id', 'firstname lastname')
+          .populate('to_user_id', 'firstname lastname'); // Populate user details
+          const connectionList = connections.map(connection => {
+            let otherUser;
+            if (connection.from_user_id._id.toString() === req.user._id.toString()) {
+                otherUser = connection.to_user_id;
+            }else {
+                otherUser = connection.from_user_id;
+            }
+                  return {
+                    user : {
+                         _id: otherUser._id,
+                         firstname: otherUser.firstname,
+                         lastname: otherUser.lastname   
+                    }
+                  }
+            });
+        res.status(200).json({ valid: true, connections: connectionList });
+    } catch (error) {
+        //console.error("Error fetching connections:", error);
+        res.status(500).json({ valid: false, message: error.message + " An error occurred while fetching connections." });
+    }
+});
+
+userRouter.get("/user/feed", authMiddleware, async (req, res) => {
+    try {
+         const requests = await connectionRequestModel.find({
+            $or: [
+                { from_user_id: req.user._id },  // Exclude requests from the current user
+                { to_user_id: req.user._id } // Exclude requests to the current user
+            ]                
+        })
+        .select("from_user_id to_user_id") 
+        .populate('from_user_id', 'firstname lastname')
+        .populate('to_user_id', 'firstname lastname'); // Populate user details
+        // Get all user ids involved in connection requests
+        const involvedUserIds = await connectionRequestModel.distinct("from_user_id");
+        const receivedUserIds = await connectionRequestModel.distinct("to_user_id");
+        const allInvolvedIds = [...new Set([...involvedUserIds, ...receivedUserIds])];
+        //console.log("All involved user IDs:", allInvolvedIds);
+        let page = parseInt(req.query.page) || 1; // Get the page number from query params, default to 1
+        const limit = parseInt(req.query.limit) || 10; // Number of users to return per page
+        const skip = (page - 1) * limit; // Calculate the number of users to skip
+        console.log(skip);
+        const cartList = await userModel.find({
+            $and : [
+                { _id: { $nin: Array.from(allInvolvedIds) } }, // Exclude users involved in connection requests
+                { _id: { $ne: req.user._id } } // Exclude the
+            ]
+        }).select("firstname lastname age gender skills")
+        .skip(skip) // Skip the number of users based on pagination
+        .limit(limit); // Limit the number of users returned
+
+        const totalUsers = await userModel.countDocuments({
+            $and: [
+                { _id: { $nin: Array.from(allInvolvedIds) } },
+                { _id: { $ne: req.user._id } }
+            ]
+        });
+       //let currentPage = page; // Initialize current page
+        const totalPages = Math.ceil(totalUsers / limit); // Calculate total pages
+        //page = page > totalPages ? totalPages : page; // Ensure current page does not exceed total pages
+        res.status(200).json({ valid: true, cartList,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalUsers: totalUsers,
+                limit: limit
+            }
+         });
+    } catch (error) {
+        //console.error("Error fetching user feed:", error);
+        res.status(500).json({ valid: false, message: error.message + " An error occurred while fetching user feed." });
     }
 });
 
