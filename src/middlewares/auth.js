@@ -2,8 +2,10 @@ import jwt from "jsonwebtoken";
 import { userModel } from "../models/user.js";
 
 export const authMiddleware = async (req, res, next) => {
-    const token = req.cookies.token; // Get the token from cookies
+    
     try {
+        const token = req.cookies.token; // Get the token from cookies
+        //console.log("Token received:", token); // Debugging line to check the token
         if (!token) {
             //return res.status(401).send("Unauthorized: No token provided");
             throw new Error("Unauthorized: No token provided");
@@ -18,7 +20,7 @@ export const authMiddleware = async (req, res, next) => {
             next();       
      } catch (error) {
         //console.error("Error fetching user:", error);
-        res.status(500).send({valid:false,message:error.message || "Internal Server Error"});
+        res.status(401).send({valid:false,message:error.message || "Internal Server Error123"});
         //throw new Error(error.message || "Internal Server Error");
     }
 }

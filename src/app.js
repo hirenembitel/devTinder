@@ -1,6 +1,7 @@
 import express from "express";
 import { dbConnection } from "./middlewares/dbconnection.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 const PORTNUMBER = process.env.PORT;
 const app = express();
@@ -8,6 +9,10 @@ const app = express();
 app.use(express.json()); // Middleware to parse JSON bodies
 app.use(dbConnection); // Use the database connection middleware
 app.use(cookieParser());
+app.use(cors({
+    origin: "http://localhost:5173", // Allow requests from this origin
+    credentials: true, // Allow cookies to be sent with requests
+}));
 
 import userRouter from "./routes/user.js";
 import authRouter from "./routes/auth.js";

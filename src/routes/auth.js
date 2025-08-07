@@ -39,11 +39,11 @@ authRouter.post("/login", async (req, res) => {
         res.status(200).send({valid:true,message:"Login successful", user});
     } catch (error) {
         //console.error("Error during login:", error);
-        res.status(500).send({valid:false,message:error.message});
+        res.status(401).send({valid:false,message:error.message});
     }
 });
 
-authRouter.get("/logout", (req, res) => {
+authRouter.post("/logout", (req, res) => {
     try{
         res.clearCookie("token"); // Clear the cookie
         res.status(200).send({valid:true,message:"Logged out successfully"});
