@@ -152,8 +152,8 @@ userRouter.get("/user/feed", authMiddleware, async (req, res) => {
         let page = parseInt(req.query.page) || 1; // Get the page number from query params, default to 1
         const limit = parseInt(req.query.limit) || 10; // Number of users to return per page
         const skip = (page - 1) * limit; // Calculate the number of users to skip
-        console.log(skip);
-        const cartList = await userModel.find({
+       // console.log(skip);
+        const cardList = await userModel.find({
             $and : [
                 { _id: { $nin: Array.from(allInvolvedIds) } }, // Exclude users involved in connection requests
                 { _id: { $ne: req.user._id } } // Exclude the
@@ -171,7 +171,7 @@ userRouter.get("/user/feed", authMiddleware, async (req, res) => {
        //let currentPage = page; // Initialize current page
         const totalPages = Math.ceil(totalUsers / limit); // Calculate total pages
         //page = page > totalPages ? totalPages : page; // Ensure current page does not exceed total pages
-        res.status(200).json({ valid: true, cartList,
+        res.status(200).json({ valid: true, cardList,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
