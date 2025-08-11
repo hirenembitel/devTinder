@@ -57,19 +57,19 @@ requestRouter.post("/request/review/:status/:requestId", authMiddleware, async (
             to_user_id: req.user._id,
             status: "interested"
         });
-        console.log(request);
+      //  console.log(request);
         if (!request) {
-            return res.status(404).json({ valid: false, message: "Connection request not found OR Already accepted or rejected or ignored the request." });
+            return res.status(200).json({ valid: false, message: `Connection request not found OR Already accepted or rejected or ignored the request.` });
         }
         // Check if the user is authorized to review this request
-        console.log(request.to_user_id.toString() +"!=="+ req.user._id.toString());
+       // console.log(request.to_user_id.toString() +"!=="+ req.user._id.toString());
         if (request.to_user_id.toString() !== req.user._id.toString()) {
             return res.status(403).json({ valid: false, message: "You are not authorized to review this request" });
         }
         // Update the status of the connection request
         request.status = req.params.status;
         const updatedRequest = await request.save();
-        res.status(200).json({ valid: true, message: `Connection request reviewed as ${req.params.status}.`, request: updatedRequest });
+        res.status(200).json({ valid: true, message: `Connection request reviewed as ${req.params.status}.`});
     } catch (error) {
         console.error("Error reviewing connection request:", error);
         res.status(500).json({ valid: false, message: error.message || "An error occurred while reviewing the connection request." });
