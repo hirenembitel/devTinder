@@ -13,12 +13,16 @@ authRouter.post("/signup", async (req, res) => {
    // res.status(201).send("User created successfully!");
     try {
         validateSignupData(req.body);
+        const existUser = await userModel.findOne({ email });        
+        if(existUser) {
+            return res.status(400).json({valid:false, message: "User already exists with this email, please use another email."});    
+        }
         const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
         const user = new userModel({ firstname, lastname, email, password:hashedPassword,age,gender, skills });
         await user.save();
-        res.status(201).send({valid:true,message:"User created successfully"});
+        res.status(201).json({valid:true,message:"User created successfully"});
     } catch (error) {            
-        res.status(400).send({valid:false, message: error.message});
+        res.status(500).json({valid:false, message: error.message});
     }
 });
 
