@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
-const uri = 'mongodb+srv://hirenembitel:s4b4vR2b6ofizeyp@cluster0.s9b1phh.mongodb.net/';
-const dbName = "NodeJSPractice";
+const uri = process.env.DB_URL;
+const dbName = process.env.DB_NAME;
+
 
 async function connectToDatabase() {   
     await mongoose.connect(uri, {

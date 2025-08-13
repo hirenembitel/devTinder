@@ -2,3 +2,6 @@ backend api call from front end, it will useful when call api one domain to anot
 for eg. our back api is http://localhost:3000 and we want to execute in http://localhost:5173 so both domain are different 
 it will give error if we dont manage with  cors , inshort will give cors error that you are not allowed to call.
 npm i cors
+
+github repository of backend
+https://github.com/akshaymarch7/devTinder
