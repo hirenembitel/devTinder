@@ -2,6 +2,7 @@ import express from "express";
 import { dbConnection } from "./middlewares/dbconnection.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import './helpers/cronjobs.js';
 
 const PORTNUMBER = process.env.PORT;
 const app = express();
