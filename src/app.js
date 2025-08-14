@@ -3,6 +3,9 @@ import { dbConnection } from "./middlewares/dbconnection.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import './helpers/cronjobs.js';
+import http, { createServer } from 'http';
+import initializeSocket from './helpers/socket.js';
+
 
 const PORTNUMBER = process.env.PORT;
 const app = express();
@@ -25,13 +28,10 @@ app.use("/",authRouter);
 app.use("/",profileRouter);
 app.use("/",requestRouter);
 //app.post("/signup", express.json(), async (req, res) => {
- 
 
+const server = http.createServer(app);
+initializeSocket(server);
 
-
-
-
-
-app.listen(PORTNUMBER,() => {
+server.listen(PORTNUMBER,() => {
     console.log(`Server is running at port ${PORTNUMBER}`);
 });
