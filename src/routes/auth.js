@@ -38,11 +38,11 @@ authRouter.post("/login", async (req, res) => {
         await user.validateCredentials(password);
         // Generate a JWT token
         const token = await user.getJWT();
-        res.cookie("token", token, { httpOnly: true, secure: true }); // Set cookie with user ID
-        //console.log("User logged in successfully:", user);
+        res.cookie("token", token, { httpOnly: true, secure: false, sameSite: "lax" }); // Set cookie with user ID
+        console.log("User logged in successfully:", user);
         res.status(200).send({valid:true,message:"Login successful", user});
     } catch (error) {
-        //console.error("Error during login:", error);
+        console.error("Error during login:", error.message);
         res.status(401).send({valid:false,message:error.message});
     }
 });
