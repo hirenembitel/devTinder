@@ -135,38 +135,42 @@ userRouter.get("/user/connections", authMiddleware, async (req, res) => {
 
 userRouter.get("/user/feed", authMiddleware, async (req, res) => {
     try {
-         const requests = await connectionRequestModel.find({
+         // 1. Find all connections involving me
+         const connections = await connectionRequestModel.find({
             $or: [
                 { from_user_id: req.user._id },  // Exclude requests from the current user
                 { to_user_id: req.user._id } // Exclude requests to the current user
             ]                
-        })
-        .select("from_user_id to_user_id") 
-        .populate('from_user_id', 'firstname lastname')
-        .populate('to_user_id', 'firstname lastname'); // Populate user details
+        }).lean();
+
+        // 2. Collect all connected userIds
+        const connectedIds = connections.map(c => 
+            c.from_user_id.toString() === req.user._id.toString()
+            ? c.to_user_id
+            : c.from_user_id
+        );
+         // Populate user details
         // Get all user ids involved in connection requests
-        const involvedUserIds = await connectionRequestModel.distinct("from_user_id");
-        const receivedUserIds = await connectionRequestModel.distinct("to_user_id");
-        const allInvolvedIds = [...new Set([...involvedUserIds, ...receivedUserIds])];
+        // const involvedUserIds = await connectionRequestModel.distinct("from_user_id");
+        // const receivedUserIds = await connectionRequestModel.distinct("to_user_id");
+        // const allInvolvedIds = [...new Set([...involvedUserIds, ...receivedUserIds])];
         //console.log("All involved user IDs:", allInvolvedIds);
         let page = parseInt(req.query.page) || 1; // Get the page number from query params, default to 1
         const limit = parseInt(req.query.limit) || 10; // Number of users to return per page
         const skip = (page - 1) * limit; // Calculate the number of users to skip
        // console.log(skip);
         const cardList = await userModel.find({
-            $and : [
-                { _id: { $nin: Array.from(allInvolvedIds) } }, // Exclude users involved in connection requests
-                { _id: { $ne: req.user._id } } // Exclude the
-            ]
+           // $and : [
+               // { _id: { $nin: Array.from(allInvolvedIds) } }, // Exclude users involved in connection requests
+              //  { _id: { $ne: req.user._id } } // Exclude the
+              _id : {$nin:[...connectedIds,req.user._id]}
+           // ]
         }).select("firstname lastname age gender skills")
         .skip(skip) // Skip the number of users based on pagination
         .limit(limit); // Limit the number of users returned
 
         const totalUsers = await userModel.countDocuments({
-            $and: [
-                { _id: { $nin: Array.from(allInvolvedIds) } },
-                { _id: { $ne: req.user._id } }
-            ]
+             _id : {$nin:[...connectedIds,req.user._id]}
         });
        //let currentPage = page; // Initialize current page
         const totalPages = Math.ceil(totalUsers / limit); // Calculate total pages
